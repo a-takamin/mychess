@@ -13,32 +13,27 @@ import com.mychess.app.engine.board.Move.AttackMove;
 import com.mychess.app.engine.board.Move.MajorMove;
 import com.mychess.app.engine.board.Tile;
 
-public class Knight extends Piece {
+public class King extends Piece {
 
-  private final static int[] CANDIDATE_MOVE_COORDINATES = {-17, -15, -10, -6, 6, 10, 15, 17};
+  private final static int[] CANDIDATE_MOVE_COORDINATES = {-9,-8,-7,-1,1,7,8,9};
 
-  public Knight(final Alliance pieceAlliance, final int piecePosition) {
+  public King(final Alliance pieceAlliance, final int piecePosition) {
     super(piecePosition, pieceAlliance);
   }
 
   @Override
   public Collection<Move> calculateLegalMoves(final Board board) {
-  
     final List<Move> legalMoves = new ArrayList<>();
-
+    
     for(final int currentCandidateOffset: CANDIDATE_MOVE_COORDINATES) {
       final int candidateDestinationCoordinate = this.piecePosition + currentCandidateOffset;
-      if(BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)) {
-
-        // 1,2,7,8列目にいるときは特定の計算がエラーになるのではじく
-        if(isFirstColumnExclusion(this.piecePosition, currentCandidateOffset) ||
-            isSecondColumnExclusiton(this.piecePosition, currentCandidateOffset) ||
-            isSeventhColumnExclusion(this.piecePosition, currentCandidateOffset) ||
-            isEighthColumnExclusiton(this.piecePosition, currentCandidateOffset)
-        ){
-          continue;
-        }
-
+      
+      if(isFirstColumnExclusion(this.piecePosition, currentCandidateOffset) ||
+          isEighthColumnExclusiton(this.piecePosition, currentCandidateOffset)) {
+        continue;
+      }
+      
+      if (BoardUtils.isValidTileCoordinate(candidateDestinationCoordinate)) {
         final Tile candidateDestinationTile = board.getTile(candidateDestinationCoordinate);
         if(!candidateDestinationTile.isTileOccupied()) {
           legalMoves.add(new MajorMove(board, this, candidateDestinationCoordinate));
@@ -52,29 +47,23 @@ public class Knight extends Piece {
         }
 
       }
+
     }
+
     return ImmutableList.copyOf(legalMoves);
   }
 
   @Override
   public String toString() {
-    return PieceType.KNIGHT.toString();
+    return PieceType.KING.toString();
   }
 
   private static boolean isFirstColumnExclusion(final int currentPosition, final int candidateOffset) {
-    return BoardUtils.FIRST_COLUMN[currentPosition] && (candidateOffset == -17 || candidateOffset == -10 || candidateOffset == 6 || candidateOffset == 15);
-  }
-
-  private static boolean isSecondColumnExclusiton(final int currentPosition, final int candidateOffset) {
-    return BoardUtils.SECOND_COLUMN[currentPosition] && (candidateOffset == -10 || candidateOffset == 6);
-  }
-
-  private static boolean isSeventhColumnExclusion(final int currentPosition, final int candidateOffset) {
-    return BoardUtils.SEVENTH_COLUMN[currentPosition] && (candidateOffset == -6 || candidateOffset == 10);
+    return BoardUtils.FIRST_COLUMN[currentPosition] && (candidateOffset == -9 || candidateOffset == -1 || candidateOffset == 7);
   }
 
   private static boolean isEighthColumnExclusiton(final int currentPosition, final int candidateOffset) {
-    return BoardUtils.EIGHTH_COLUMN[currentPosition] && (candidateOffset == -15 || candidateOffset == -6 || candidateOffset == 10 || candidateOffset == 17);
+    return BoardUtils.EIGHTH_COLUMN[currentPosition] && (candidateOffset == -7 || candidateOffset == 1 || candidateOffset == 9);
   }
-    
+  
 }

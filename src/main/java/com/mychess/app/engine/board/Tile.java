@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+import com.mychess.app.engine.Alliance;
 import com.mychess.app.engine.pieces.Piece;
 
 public abstract class Tile {
@@ -13,7 +14,7 @@ public abstract class Tile {
 
   private static Map<Integer, EmptyTile> createAllPossibleEmtpyTiles(){  
     final Map<Integer, EmptyTile> emptyTileMap = new HashMap<>();
-    for (int i= 0; i<64; i++){
+    for (int i= 0; i< BoardUtils.NUM_TILES; i++){
       emptyTileMap.put(i, new EmptyTile(i));
     }
     return ImmutableMap.copyOf(emptyTileMap);
@@ -37,6 +38,11 @@ public abstract class Tile {
     }
 
     @Override
+    public String toString() {
+      return "-";
+    }
+
+    @Override
     public boolean isTileOccupied(){
       return false;
     }
@@ -54,6 +60,11 @@ public abstract class Tile {
     OccupiedTile(int coordinate, Piece pieceOnTile) {
       super(coordinate);
       this.pieceOnTile = pieceOnTile;
+    }
+
+    @Override
+    public String toString() {
+      return getPiece().getPieceAlliance().isBlack() ? getPiece().toString().toLowerCase() : getPiece().toString();
     }
 
     @Override
