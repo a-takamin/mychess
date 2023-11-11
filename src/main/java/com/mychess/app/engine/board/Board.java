@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.mychess.app.engine.Alliance;
 import com.mychess.app.engine.pieces.Bishop;
 import com.mychess.app.engine.pieces.King;
@@ -15,20 +16,31 @@ import com.mychess.app.engine.pieces.Pawn;
 import com.mychess.app.engine.pieces.Piece;
 import com.mychess.app.engine.pieces.Queen;
 import com.mychess.app.engine.pieces.Rook;
+import com.mychess.app.engine.player.BlackPlayer;
+import com.mychess.app.engine.player.Player;
+import com.mychess.app.engine.player.WhitePlayer;
 
 public class Board {
 
   private final List<Tile> gameBoard;
   private final Collection<Piece> whitePieces;
   private final Collection<Piece> blackPieces;
+
+  private final WhitePlayer whitePlayer;
+  private final BlackPlayer blackPlayer;
+  private final Player currentPlayer;
   
-  private Board(Builder builder) {
+  private Board(final Builder builder) {
     this.gameBoard = createGameBoard(builder);
     this.whitePieces = calculateActivePieces(this.gameBoard, Alliance.WHITE);
     this.blackPieces = calculateActivePieces(this.gameBoard, Alliance.BLACK);
 
     final Collection<Move> whiteStandardLegalMoves = calculateLegalMoves(this.whitePieces);
     final Collection<Move> blackStandardLegalMoves = calculateLegalMoves(this.blackPieces);
+
+    this.whitePlayer = new WhitePlayer(this, whiteStandardLegalMoves, blackStandardLegalMoves);
+    this.blackPlayer = new BlackPlayer(this, blackStandardLegalMoves, whiteStandardLegalMoves);
+    this.currentPlayer = builder.nextMoveMaker.choosePlayer(this.whitePlayer, this.blackPlayer);
   }
 
   @Override
@@ -42,6 +54,26 @@ public class Board {
       }
     }
     return builder.toString();
+  }
+
+  public Player whitePlayer() {
+    return this.whitePlayer;
+  }
+
+  public Player blackPlayer() {
+    return this.blackPlayer;
+  }
+
+  public Player currentPlayer() {
+    return this.currentPlayer;
+  }
+
+  public Collection<Piece> getBlackPieces() {
+    return this.blackPieces;
+  }
+
+  public Collection<Piece> getWhitePieces() {
+    return this.whitePieces;
   }
 
   private static String prettyPrint(final Tile tile) {
@@ -87,8 +119,8 @@ public class Board {
     builder.setPiece(new Rook(Alliance.BLACK, 0));
     builder.setPiece(new Knight(Alliance.BLACK, 1));
     builder.setPiece(new Bishop(Alliance.BLACK, 2));
-    builder.setPiece(new King(Alliance.BLACK, 3));
-    builder.setPiece(new Queen(Alliance.BLACK, 4));
+    builder.setPiece(new Queen(Alliance.BLACK, 3));
+    builder.setPiece(new King(Alliance.BLACK, 4));
     builder.setPiece(new Bishop(Alliance.BLACK, 5));
     builder.setPiece(new Knight(Alliance.BLACK, 6));
     builder.setPiece(new Rook(Alliance.BLACK, 7));
@@ -112,8 +144,8 @@ public class Board {
     builder.setPiece(new Rook(Alliance.WHITE, 56));
     builder.setPiece(new Knight(Alliance.WHITE, 57));
     builder.setPiece(new Bishop(Alliance.WHITE, 58));
-    builder.setPiece(new King(Alliance.WHITE, 59));
-    builder.setPiece(new Queen(Alliance.WHITE, 60));
+    builder.setPiece(new Queen(Alliance.WHITE, 59));
+    builder.setPiece(new King(Alliance.WHITE, 60));
     builder.setPiece(new Bishop(Alliance.WHITE, 61));
     builder.setPiece(new Knight(Alliance.WHITE, 62));
     builder.setPiece(new Rook(Alliance.WHITE, 63));
@@ -122,10 +154,15 @@ public class Board {
     return builder.build();
   }
 
+  public Iterable<Move> getAllLegalMoves() {
+    return Iterables.unmodifiableIterable(Iterables.concat(this.whitePlayer.getLegalMoves(), this.blackPlayer.getLegalMoves()));
+  }
+
   public static class Builder {
 
     Map<Integer, Piece> boardConfig;
     Alliance nextMoveMaker;
+    Pawn enPassantPawn;
 
     public Builder() {
       this.boardConfig = new HashMap<>();
@@ -143,6 +180,10 @@ public class Board {
 
     public Board build() {
       return new Board(this);
+    }
+
+    public void setEnPassantPawn(Pawn enPassantPawn) {
+      this.enPassantPawn = enPassantPawn;
     }
   }
 }
