@@ -1,0 +1,74 @@
+package com.mychess.app.engine.player;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+import com.mychess.app.engine.Alliance;
+import com.mychess.app.engine.board.Board;
+import com.mychess.app.engine.board.Move;
+import com.mychess.app.engine.board.Move.KingSideCastleMove;
+import com.mychess.app.engine.board.Move.QueenSideCastleMove;
+import com.mychess.app.engine.board.Tile;
+import com.mychess.app.engine.pieces.Piece;
+import com.mychess.app.engine.pieces.Rook;
+
+public class WhitePlayer extends Player {
+  public WhitePlayer(final Board board, final Collection<Move> whiteStandardLegalMoves,
+      final Collection<Move> blackStandardLegalMoves) {
+    super(board, whiteStandardLegalMoves, blackStandardLegalMoves);
+  }
+
+  @Override
+  public Collection<Piece> getActivePieces() {
+    return this.board.getWhitePieces();
+  }
+
+  @Override
+  public Alliance getAlliance() {
+    return Alliance.WHITE;
+  }
+
+  @Override
+  public Player getOpponent() {
+    return this.board.blackPlayer();
+  }
+
+  @Override
+  protected Collection<Move> calculateKingCastles(Collection<Move> playerLegals, Collection<Move> opponentsLegals) {
+    final List<Move> kingCastles = new ArrayList<>();
+
+    if (this.playerKing.isFirstMove() && !this.isInCheck()) {
+      // white king side castle
+      if (!this.board.getTile(61).isTileOccupied() && !this.board.getTile(62).isTileOccupied()) {
+        final Tile rookTile = this.board.getTile(63);
+        if (rookTile.isTileOccupied() && rookTile.getPiece().isFirstMove()
+            && rookTile.getPiece().getPieceType().isRook()) {
+          if (Player.calculateAttacksOnTile(61, opponentsLegals).isEmpty()
+              && Player.calculateAttacksOnTile(62, opponentsLegals).isEmpty()) {
+            kingCastles.add(new KingSideCastleMove(this.board, this.playerKing, 62, (Rook) rookTile.getPiece(),
+                rookTile.getTileCoordinate(), 61));
+          }
+        }
+      }
+
+      if (!this.board.getTile(59).isTileOccupied() && !this.board.getTile(58).isTileOccupied()
+          && !this.board.getTile(57).isTileOccupied()) {
+        final Tile rookTile = this.board.getTile(56);
+        if (rookTile.isTileOccupied() && rookTile.getPiece().isFirstMove()
+            && rookTile.getPiece().getPieceType().isRook()) {
+          if (Player.calculateAttacksOnTile(59, opponentsLegals).isEmpty()
+              && Player.calculateAttacksOnTile(58, opponentsLegals).isEmpty()
+              && Player.calculateAttacksOnTile(57, opponentsLegals).isEmpty()) {
+            kingCastles.add(new KingSideCastleMove(this.board, this.playerKing, 62, (Rook) rookTile.getPiece(),
+                rookTile.getTileCoordinate(), 61));
+          }
+        }
+      }
+    }
+
+    return ImmutableList.copyOf(kingCastles);
+  }
+
+}
