@@ -9,8 +9,7 @@ import com.mychess.app.gui.Table;
  */
 public class JChess {
   public static void main(String[] args) {
-    Board board = Board.createStandardBoard();
-    System.out.println(board);
+    // Board board = Board.createStandardBoard();
 
     Table table = new Table();
   }
