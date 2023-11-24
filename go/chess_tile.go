@@ -11,28 +11,21 @@ import (
 
 type ChessTile struct {
 	widget.BaseWidget // 「埋め込み」と呼ばれる。widget.BaseWidget型のフィールドとメソッドを継承する
+	chessBoard        *ChessBoard
 	tileId            int
 	team              string
+	piece             Piece
 	backgroundColor   color.Color
 	backgroundImage   *canvas.Image
 }
 
-// func NewChessTile(position int, bgColor color.Color, bgImage *canvas.Image) *ChessTile {
-// 	w := &ChessTile{
-// 		tileId:          position,
-// 		team:            "",
-// 		backgroundColor: bgColor,
-// 		backgroundImage: bgImage,
-// 	}
-// 	w.ExtendBaseWidget(w)
-// 	return w
-// }
-
-func NewChessTile(position int, piece Piece) *ChessTile {
+func NewChessTile(position int, piece Piece, chessBoard *ChessBoard) *ChessTile {
 
 	tile := &ChessTile{
+		chessBoard:      chessBoard,
 		tileId:          position,
 		team:            piece.GetPieceTeam(),
+		piece:           piece,
 		backgroundColor: calcTileColor(position),
 		backgroundImage: canvas.NewImageFromFile(piece.GetIconPath()),
 	}
@@ -60,7 +53,10 @@ func (w *ChessTile) CreateRenderer() fyne.WidgetRenderer {
 }
 
 func (w *ChessTile) Tapped(*fyne.PointEvent) {
-	fmt.Println("Tapped")
+	piece := w.piece
+	board := w.chessBoard
+	fmt.Println(piece.GetPieceType())
+	fmt.Println(board.trunTeam)
 }
 
 // @Override

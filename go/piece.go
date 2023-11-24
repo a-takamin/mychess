@@ -1,9 +1,10 @@
 package main
 
 type Piece interface {
-	Move() int // クリック時に呼ばれる
+	// GetPossibleMoves(currentPosition int) []int
+	// CalcNextPosition(currentPosition int) []int
+
 	GetPieceType() string
 	GetPieceTeam() string
-	CalcNextPosition(currentPosition int) []int
 	GetIconPath() string
 }

@@ -1,9 +1,7 @@
 package main
 
 type Rook struct {
-	pieceType string
-	pieceTeam string
-	iconPath  string
+	BasePiece
 }
 
 func NewRook(team string) *Rook {
@@ -14,28 +12,10 @@ func NewRook(team string) *Rook {
 		iconPath = "./image/wr.png"
 	}
 	return &Rook{
-		pieceType: "Rook",
-		pieceTeam: team,
-		iconPath:  iconPath,
+		BasePiece: BasePiece{
+			pieceType: "Rook",
+			pieceTeam: team,
+			iconPath:  iconPath,
+		},
 	}
-}
-
-func (p *Rook) Move() int {
-	return 1
-}
-
-func (p *Rook) GetPieceType() string {
-	return p.pieceType
-}
-
-func (p *Rook) GetPieceTeam() string {
-	return p.pieceTeam
-}
-
-func (p *Rook) CalcNextPosition(currentPosition int) []int {
-	return []int{1}
-}
-
-func (p *Rook) GetIconPath() string {
-	return p.iconPath
 }

@@ -7,8 +7,8 @@ import (
 )
 
 type ChessBoard struct {
-	board  *fyne.Container
-	pieces map[int]Piece
+	board    *fyne.Container
+	trunTeam string
 	// ToDo
 }
 
@@ -17,68 +17,72 @@ func (c *ChessBoard) GetBoard() *fyne.Container {
 }
 
 func NewInitialChessBoard() *ChessBoard {
-	cbb := NewChessBoardBuilder()
 
-	wr1 := NewChessTile(0, NewRook("white"))
-	wn1 := NewChessTile(1, NewKnight("white"))
-	wb1 := NewChessTile(2, NewBishop("white"))
-	wk := NewChessTile(3, NewKing("white"))
-	wq := NewChessTile(4, NewQueen("white"))
-	wb2 := NewChessTile(5, NewBishop("white"))
-	wn2 := NewChessTile(6, NewKnight("white"))
-	wr2 := NewChessTile(7, NewRook("white"))
-	wp1 := NewChessTile(8, NewPawn("white"))
-	wp2 := NewChessTile(9, NewPawn("white"))
-	wp3 := NewChessTile(10, NewPawn("white"))
-	wp4 := NewChessTile(11, NewPawn("white"))
-	wp5 := NewChessTile(12, NewPawn("white"))
-	wp6 := NewChessTile(13, NewPawn("white"))
-	wp7 := NewChessTile(14, NewPawn("white"))
-	wp8 := NewChessTile(15, NewPawn("white"))
+	chessBoard := &ChessBoard{}
+	board := container.New(layout.NewGridLayout(8))
 
-	cbb.Set(wr1).Set(wn1).Set(wb1).Set(wk).Set(wq).Set(wb2).Set(wn2).Set(wr2).Set(wp1).Set(wp2).Set(wp3).Set(wp4).Set(wp5).Set(wp6).Set(wp7).Set(wp8)
+	board.Add(NewChessTile(0, NewRook("white"), chessBoard))
+	board.Add(NewChessTile(1, NewKnight("white"), chessBoard))
+	board.Add(NewChessTile(2, NewBishop("white"), chessBoard))
+	board.Add(NewChessTile(3, NewKing("white"), chessBoard))
+	board.Add(NewChessTile(4, NewQueen("white"), chessBoard))
+	board.Add(NewChessTile(5, NewBishop("white"), chessBoard))
+	board.Add(NewChessTile(6, NewKnight("white"), chessBoard))
+	board.Add(NewChessTile(7, NewRook("white"), chessBoard))
+	board.Add(NewChessTile(8, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(9, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(10, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(11, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(12, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(13, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(14, NewPawn("white"), chessBoard))
+	board.Add(NewChessTile(15, NewPawn("white"), chessBoard))
 
-	bp1 := NewChessTile(48, NewPawn("black"))
-	bp2 := NewChessTile(49, NewPawn("black"))
-	bp3 := NewChessTile(50, NewPawn("black"))
-	bp4 := NewChessTile(51, NewPawn("black"))
-	bp5 := NewChessTile(52, NewPawn("black"))
-	bp6 := NewChessTile(53, NewPawn("black"))
-	bp7 := NewChessTile(54, NewPawn("black"))
-	bp8 := NewChessTile(55, NewPawn("black"))
-	br1 := NewChessTile(56, NewRook("black"))
-	bn1 := NewChessTile(57, NewKnight("black"))
-	bb1 := NewChessTile(58, NewBishop("black"))
-	bk := NewChessTile(59, NewKing("black"))
-	bq := NewChessTile(60, NewQueen("black"))
-	bb2 := NewChessTile(61, NewBishop("black"))
-	bn2 := NewChessTile(62, NewKnight("black"))
-	br2 := NewChessTile(63, NewRook("black"))
+	for i := 16; i < 48; i++ {
+		board.Add(NewChessTile(i, NewNoPiece("noteam"), chessBoard))
+	}
 
-	cbb.Set(bp1).Set(bp2).Set(bp3).Set(bp4).Set(bp5).Set(bp6).Set(bp7).Set(bp8).Set(br1).Set(bn1).Set(bb1).Set(bk).Set(bq).Set(bb2).Set(bn2).Set(br2)
+	board.Add(NewChessTile(48, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(49, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(50, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(51, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(52, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(53, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(54, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(55, NewPawn("black"), chessBoard))
+	board.Add(NewChessTile(56, NewRook("black"), chessBoard))
+	board.Add(NewChessTile(57, NewKnight("black"), chessBoard))
+	board.Add(NewChessTile(58, NewBishop("black"), chessBoard))
+	board.Add(NewChessTile(59, NewKing("black"), chessBoard))
+	board.Add(NewChessTile(60, NewQueen("black"), chessBoard))
+	board.Add(NewChessTile(61, NewBishop("black"), chessBoard))
+	board.Add(NewChessTile(62, NewKnight("black"), chessBoard))
+	board.Add(NewChessTile(63, NewRook("black"), chessBoard))
 
-	return cbb.Build()
+	chessBoard.board = board
+	chessBoard.trunTeam = "white"
+
+	return chessBoard
 }
 
-func NewChessBoard(tiles map[int]*ChessTile) *ChessBoard {
-	chessBoard := &ChessBoard{}
-	chessBoard.pieces = make(map[int]Piece)
-	c := container.New(layout.NewGridLayout(8))
-	chessBoard.board = c
+func NewChessBoard(currentChessBoard *ChessBoard, nextMove Move) *ChessBoard {
 
-	for row := 0; row < 8; row++ {
-		for col := 0; col < 8; col++ {
-			position := row*8 + col
-			var tile *ChessTile
+	tiles := currentChessBoard.board.Objects
+	newChessBoard := &ChessBoard{}
+	board := container.New(layout.NewGridLayout(8))
+	newChessBoard.trunTeam = currentChessBoard.trunTeam
 
-			if tiles[position] == nil {
-				tile = NewChessTile(position, &NoPiece{})
-			} else {
-				tile = tiles[position]
-			}
-			c.Add(tile)
-			// chessBoard.pieces[position] = tile
+	for _, tile := range tiles {
+		tileId := tile.(*ChessTile).tileId
+		if tileId == nextMove.from {
+			board.Add(NewChessTile(tileId, NewNoPiece("noteam"), newChessBoard))
+		} else if tileId == nextMove.to {
+			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
+		} else {
+			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
 		}
 	}
-	return chessBoard
+
+	newChessBoard.board = board
+	return newChessBoard
 }
