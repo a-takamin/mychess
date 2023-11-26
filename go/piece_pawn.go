@@ -19,3 +19,7 @@ func NewPawn(team string) *Pawn {
 		},
 	}
 }
+
+func (p *Pawn) CalcPossibleNextMove(currentPosition int) []*Move {
+	return []*Move{}
+}

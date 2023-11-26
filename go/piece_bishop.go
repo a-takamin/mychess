@@ -19,3 +19,7 @@ func NewBishop(team string) *Bishop {
 		},
 	}
 }
+
+func (p *Bishop) CalcPossibleNextMove(currentPosition int) []*Move {
+	return []*Move{}
+}

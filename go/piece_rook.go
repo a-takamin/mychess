@@ -19,3 +19,7 @@ func NewRook(team string) *Rook {
 		},
 	}
 }
+
+func (p *Rook) CalcPossibleNextMove(currentPosition int) []*Move {
+	return []*Move{}
+}

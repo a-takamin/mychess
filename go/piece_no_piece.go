@@ -13,3 +13,7 @@ func NewNoPiece(team string) *NoPiece {
 		},
 	}
 }
+
+func (p *NoPiece) CalcPossibleNextMove(currentPosition int) []*Move {
+	return []*Move{}
+}

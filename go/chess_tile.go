@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"slices"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -14,9 +15,10 @@ type ChessTile struct {
 	chessBoard        *ChessBoard
 	tileId            int
 	team              string
-	piece             Piece
-	backgroundColor   color.Color
-	backgroundImage   *canvas.Image
+	// piece は interface として使ってポリモーフィズムを機能させるのでポインタではなくそのまま構造体を持つ
+	piece           Piece
+	backgroundColor color.Color
+	backgroundImage *canvas.Image
 }
 
 func NewChessTile(position int, piece Piece, chessBoard *ChessBoard) *ChessTile {
@@ -52,17 +54,41 @@ func (w *ChessTile) CreateRenderer() fyne.WidgetRenderer {
 	return &chessTileRenderer{objects: objects, background: bg, image: w.backgroundImage}
 }
 
-func (w *ChessTile) Tapped(*fyne.PointEvent) {
-	piece := w.piece
-	board := w.chessBoard
-	fmt.Println(piece.GetPieceType())
-	fmt.Println(board.trunTeam)
+func (tile *ChessTile) Tapped(*fyne.PointEvent) {
+	if tile.chessBoard.selectedTile == nil {
+		tile.chessBoard.selectedTile = tile
+		fmt.Printf("%s's %s is selected!\n", tile.team, tile.piece.GetPieceType())
+		return
+	}
+	// 以下、2回目のタップということになる
+	firstSelectedTile := tile.chessBoard.selectedTile
+	secondSelectedTile := tile
+	move := NewMove(firstSelectedTile, secondSelectedTile.getTileId())
+
+	if !slices.Contains(tile.chessBoard.possibleNextMove, move) {
+		fmt.Printf("Invalid move: %s's %s from %d to %d\n", firstSelectedTile.getPiece().GetPieceTeam(), firstSelectedTile.getPiece().GetPieceType(), firstSelectedTile.getTileId(), secondSelectedTile.getTileId())
+		tile.chessBoard.selectedTile = nil
+		return
+	}
+	// selectedTileの初期化
+	tile.chessBoard.selectedTile = nil
+	// ボードの更新
+	renewChessBoard(tile.chessBoard, move)
+	// possibleMoveの更新
+	tile.chessBoard.possibleNextMove = tile.chessBoard.getAllPossibleMove(tile.chessBoard.trunTeam)
+	// turnTeamの変更
+	if tile.chessBoard.trunTeam == "white" {
+		tile.chessBoard.trunTeam = "black"
+	} else {
+		tile.chessBoard.trunTeam = "white"
+	}
 }
 
 // @Override
 func (w *ChessTile) MinSize() fyne.Size {
 	if w.backgroundImage == nil {
-		return fyne.NewSize(1, 1) // 暫定的…
+		// 背景画像（コマ）がない場合は何を返せば良いのか。Gridで良い感じになるのでとりあえず(1,1)を返している
+		return fyne.NewSize(1, 1)
 	}
 	return w.backgroundImage.MinSize()
 }
@@ -110,4 +136,12 @@ func WhiteTileColor() color.RGBA {
 // 白と緑にした
 func GreenTileColor() color.RGBA {
 	return color.RGBA{146, 174, 120, 255}
+}
+
+func (t *ChessTile) getPiece() Piece {
+	return t.piece
+}
+
+func (t *ChessTile) getTileId() int {
+	return t.tileId
 }

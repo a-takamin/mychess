@@ -1,8 +1,7 @@
 package main
 
 type Piece interface {
-	// GetPossibleMoves(currentPosition int) []int
-	// CalcNextPosition(currentPosition int) []int
+	CalcPossibleNextMove(currentPosition int) []*Move
 
 	GetPieceType() string
 	GetPieceTeam() string

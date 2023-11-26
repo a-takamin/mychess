@@ -19,3 +19,7 @@ func NewKing(team string) *King {
 		},
 	}
 }
+
+func (p *King) CalcPossibleNextMove(currentPosition int) []*Move {
+	return []*Move{}
+}

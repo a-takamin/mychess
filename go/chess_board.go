@@ -7,8 +7,10 @@ import (
 )
 
 type ChessBoard struct {
-	board    *fyne.Container
-	trunTeam string
+	board            *fyne.Container
+	trunTeam         string
+	selectedTile     *ChessTile
+	possibleNextMove []*Move
 	// ToDo
 }
 
@@ -61,28 +63,44 @@ func NewInitialChessBoard() *ChessBoard {
 
 	chessBoard.board = board
 	chessBoard.trunTeam = "white"
+	chessBoard.selectedTile = nil
 
 	return chessBoard
 }
 
-func NewChessBoard(currentChessBoard *ChessBoard, nextMove Move) *ChessBoard {
+func renewChessBoard(chessBoard *ChessBoard, nextMove *Move) {
 
-	tiles := currentChessBoard.board.Objects
-	newChessBoard := &ChessBoard{}
-	board := container.New(layout.NewGridLayout(8))
-	newChessBoard.trunTeam = currentChessBoard.trunTeam
+	currentTiles := chessBoard.board.Objects
+	board := chessBoard.board
+	board.RemoveAll()
 
-	for _, tile := range tiles {
+	for _, tile := range currentTiles {
 		tileId := tile.(*ChessTile).tileId
-		if tileId == nextMove.from {
-			board.Add(NewChessTile(tileId, NewNoPiece("noteam"), newChessBoard))
+		if tileId == nextMove.fromTile.getTileId() {
+			// 空にする
+			board.Add(NewChessTile(tileId, NewNoPiece("noteam"), chessBoard))
 		} else if tileId == nextMove.to {
-			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
+			// 移動先に移動元の駒を移動させる
+			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, chessBoard))
 		} else {
-			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
+			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, chessBoard))
 		}
 	}
 
-	newChessBoard.board = board
-	return newChessBoard
+	board.Refresh()
+}
+
+func (c *ChessBoard) getAllPossibleMove(turnTeam string) []*Move {
+	var possibleNextMove []*Move
+	for _, tile := range c.board.Objects {
+		t, _ := tile.(*ChessTile)
+		if t.team == turnTeam {
+			possibleNextMove = append(possibleNextMove, t.getPiece().CalcPossibleNextMove(t.getTileId())...)
+		}
+	}
+	return possibleNextMove
+}
+
+func (c *ChessBoard) GetPossibleNextMove() []*Move {
+	return c.possibleNextMove
 }
