@@ -20,6 +20,6 @@ func NewBishop(team string) *Bishop {
 	}
 }
 
-func (p *Bishop) CalcPossibleNextMove(currentPosition int) []*Move {
+func (p *Bishop) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	return []*Move{}
 }

@@ -14,6 +14,6 @@ func NewNoPiece(team string) *NoPiece {
 	}
 }
 
-func (p *NoPiece) CalcPossibleNextMove(currentPosition int) []*Move {
+func (p *NoPiece) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	return []*Move{}
 }

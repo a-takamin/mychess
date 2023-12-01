@@ -56,6 +56,11 @@ func (w *ChessTile) CreateRenderer() fyne.WidgetRenderer {
 
 func (tile *ChessTile) Tapped(*fyne.PointEvent) {
 	if tile.chessBoard.selectedTile == nil {
+		if tile.getPiece().GetPieceTeam() == "noteam" {
+			fmt.Printf("NoTeam Tile is selected\n")
+			tile.chessBoard.selectedTile = nil
+			return
+		}
 		tile.chessBoard.selectedTile = tile
 		fmt.Printf("%s's %s is selected!\n", tile.team, tile.piece.GetPieceType())
 		return
@@ -65,7 +70,7 @@ func (tile *ChessTile) Tapped(*fyne.PointEvent) {
 	secondSelectedTile := tile
 	move := NewMove(firstSelectedTile, secondSelectedTile.getTileId())
 
-	if !slices.Contains(tile.chessBoard.possibleNextMove, move) {
+	if !isValidMove(move, tile.chessBoard.possibleNextMove) {
 		fmt.Printf("Invalid move: %s's %s from %d to %d\n", firstSelectedTile.getPiece().GetPieceTeam(), firstSelectedTile.getPiece().GetPieceType(), firstSelectedTile.getTileId(), secondSelectedTile.getTileId())
 		tile.chessBoard.selectedTile = nil
 		return
@@ -74,14 +79,16 @@ func (tile *ChessTile) Tapped(*fyne.PointEvent) {
 	tile.chessBoard.selectedTile = nil
 	// ボードの更新
 	renewChessBoard(tile.chessBoard, move)
-	// possibleMoveの更新
-	tile.chessBoard.possibleNextMove = tile.chessBoard.getAllPossibleMove(tile.chessBoard.trunTeam)
-	// turnTeamの変更
-	if tile.chessBoard.trunTeam == "white" {
-		tile.chessBoard.trunTeam = "black"
-	} else {
-		tile.chessBoard.trunTeam = "white"
+
+}
+
+func isValidMove(move *Move, possibleNextMove []*Move) bool {
+	for _, m := range possibleNextMove {
+		if move.fromTile.getTileId() == m.fromTile.getTileId() && move.to == m.to {
+			return true
+		}
 	}
+	return slices.Contains(possibleNextMove, move)
 }
 
 // @Override
@@ -144,4 +151,8 @@ func (t *ChessTile) getPiece() Piece {
 
 func (t *ChessTile) getTileId() int {
 	return t.tileId
+}
+
+func (t *ChessTile) getChessBoard() *ChessBoard {
+	return t.chessBoard
 }

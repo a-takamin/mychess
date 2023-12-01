@@ -20,6 +20,6 @@ func NewRook(team string) *Rook {
 	}
 }
 
-func (p *Rook) CalcPossibleNextMove(currentPosition int) []*Move {
+func (p *Rook) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	return []*Move{}
 }
