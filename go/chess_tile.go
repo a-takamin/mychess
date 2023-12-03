@@ -77,7 +77,7 @@ func (tile *ChessTile) Tapped(*fyne.PointEvent) {
 	}
 	// selectedTileの初期化
 	tile.chessBoard.selectedTile = nil
-	// ボードの更新
+	// ボードの更新（実際に手を実行する）
 	renewChessBoard(tile.chessBoard, move)
 
 }

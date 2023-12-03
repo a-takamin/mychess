@@ -7,11 +7,19 @@ import (
 )
 
 type ChessBoard struct {
+	w                fyne.Window
 	board            *fyne.Container
 	trunTeam         string
 	selectedTile     *ChessTile
 	possibleNextMove []*Move
+	whiteKingTile    *ChessTile
+	blackKingTile    *ChessTile
 	// ToDo
+}
+
+func (c *ChessBoard) draw() {
+	c.w.SetContent(c.board)
+	// c.w.Canvas().Refresh(c.board)
 }
 
 func (c *ChessBoard) GetBoard() *fyne.Container {
@@ -27,7 +35,9 @@ func NewInitialChessBoard() *ChessBoard {
 	board.Add(NewChessTile(1, NewKnight("black"), chessBoard))
 	board.Add(NewChessTile(2, NewBishop("black"), chessBoard))
 	board.Add(NewChessTile(3, NewQueen("black"), chessBoard))
-	board.Add(NewChessTile(4, NewKing("black"), chessBoard))
+	blackKingTile := NewChessTile(4, NewKing("black"), chessBoard)
+	chessBoard.whiteKingTile = blackKingTile
+	board.Add(blackKingTile)
 	board.Add(NewChessTile(5, NewBishop("black"), chessBoard))
 	board.Add(NewChessTile(6, NewKnight("black"), chessBoard))
 	board.Add(NewChessTile(7, NewRook("black"), chessBoard))
@@ -56,7 +66,9 @@ func NewInitialChessBoard() *ChessBoard {
 	board.Add(NewChessTile(57, NewKnight("white"), chessBoard))
 	board.Add(NewChessTile(58, NewBishop("white"), chessBoard))
 	board.Add(NewChessTile(59, NewQueen("white"), chessBoard))
-	board.Add(NewChessTile(60, NewKing("white"), chessBoard))
+	whiteKingTile := NewChessTile(60, NewKing("white"), chessBoard)
+	chessBoard.whiteKingTile = whiteKingTile
+	board.Add(whiteKingTile)
 	board.Add(NewChessTile(61, NewBishop("white"), chessBoard))
 	board.Add(NewChessTile(62, NewKnight("white"), chessBoard))
 	board.Add(NewChessTile(63, NewRook("white"), chessBoard))
@@ -69,40 +81,80 @@ func NewInitialChessBoard() *ChessBoard {
 	return chessBoard
 }
 
-func renewChessBoard(chessBoard *ChessBoard, nextMove *Move) {
+func renewChessBoard(currentChessBoard *ChessBoard, nextMove *Move) {
+	newChessBoard := newChessBoard(currentChessBoard, nextMove)
+	newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(newChessBoard.trunTeam)
+	newChessBoard.draw()
+}
 
-	currentTiles := chessBoard.board.Objects
-	board := chessBoard.board
-	board.RemoveAll()
+func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move) *ChessBoard {
+	currentTiles := currentChessBoard.board.Objects
+	newChessBoard := &ChessBoard{}
+	nextBoard := container.New(layout.NewGridLayout(8))
 
 	for _, tile := range currentTiles {
 		tileId := tile.(*ChessTile).tileId
 		if tileId == nextMove.fromTile.getTileId() {
 			// 移動元は空にする
-			board.Add(NewChessTile(tileId, NewNoPiece("noteam"), chessBoard))
+			nextBoard.Add(NewChessTile(tileId, NewNoPiece("noteam"), newChessBoard))
 		} else if tileId == nextMove.to {
 			// 移動先に移動元の駒を移動させる
+			/// 特殊1: ポーン昇格
 			if nextMove.fromTile.getPiece().GetPieceType() == "Pawn" && nextMove.fromTile.getPiece().GetPieceTeam() == "white" && nextMove.to >= 0 && nextMove.to <= 7 {
-				board.Add(NewChessTile(tileId, NewQueen("white"), chessBoard))
+				nextBoard.Add(NewChessTile(tileId, NewQueen("white"), newChessBoard))
 			} else if nextMove.fromTile.getPiece().GetPieceType() == "Pawn" && nextMove.fromTile.getPiece().GetPieceTeam() == "black" && nextMove.to >= 56 && nextMove.to <= 63 {
-				board.Add(NewChessTile(tileId, NewQueen("black"), chessBoard))
+				nextBoard.Add(NewChessTile(tileId, NewQueen("black"), newChessBoard))
+				/// TODO: 特殊2: EnPassantロジック
+				/// TODO: 特殊3: キャスリングの場合は、キングとルークを同時に移動させる
 			} else {
-				board.Add(NewChessTile(tileId, nextMove.fromTile.getPiece(), chessBoard))
+				nextBoard.Add(NewChessTile(tileId, nextMove.fromTile.getPiece(), newChessBoard))
 			}
 		} else {
-			board.Add(NewChessTile(tileId, tile.(*ChessTile).piece, chessBoard))
+			nextBoard.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
 		}
 	}
-	// 再描画
-	board.Refresh()
-	// turnTeamの変更
-	if chessBoard.trunTeam == "white" {
-		chessBoard.trunTeam = "black"
+	// kingの位置を把握する
+	var whiteKingTile *ChessTile
+	var blackKingTile *ChessTile
+	if nextMove.fromTile.getPiece().GetPieceType() == "King" {
+		if nextMove.fromTile.getPiece().GetPieceTeam() == "white" {
+			whiteKingTile = nextBoard.Objects[nextMove.to].(*ChessTile)
+			blackKingTile = currentChessBoard.blackKingTile
+		} else {
+			whiteKingTile = currentChessBoard.whiteKingTile
+			blackKingTile = nextBoard.Objects[nextMove.to].(*ChessTile)
+		}
 	} else {
-		chessBoard.trunTeam = "white"
+		whiteKingTile = currentChessBoard.whiteKingTile
+		blackKingTile = currentChessBoard.blackKingTile
 	}
-	// possibleMoveの更新
-	chessBoard.possibleNextMove = chessBoard.getAllPossibleMove(chessBoard.trunTeam)
+	var nextTeam string
+	if currentChessBoard.trunTeam == "white" {
+		nextTeam = "black"
+	} else {
+		nextTeam = "white"
+	}
+	newChessBoard.w = currentChessBoard.w
+	newChessBoard.board = nextBoard
+	newChessBoard.trunTeam = nextTeam
+	newChessBoard.selectedTile = nil
+	// newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(nextTeam)
+	newChessBoard.whiteKingTile = whiteKingTile
+	newChessBoard.blackKingTile = blackKingTile
+	return newChessBoard
+}
+
+func isMoveBeInChecked(currentChessBoard *ChessBoard, nextMove *Move) bool {
+	// 仮想的に手を実行
+	// チェックがかかる手があってしまわないか判定
+	supposedNextChessBoard := newChessBoard(currentChessBoard, nextMove)
+	// FIXME: 無限ループが起きている
+	for _, enemyPossibleNextMove := range supposedNextChessBoard.getAllPossibleMove(supposedNextChessBoard.trunTeam) {
+		if enemyPossibleNextMove.to == supposedNextChessBoard.whiteKingTile.getTileId() || enemyPossibleNextMove.to == supposedNextChessBoard.blackKingTile.getTileId() {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *ChessBoard) getAllPossibleMove(turnTeam string) []*Move {
@@ -113,9 +165,20 @@ func (c *ChessBoard) getAllPossibleMove(turnTeam string) []*Move {
 			possibleNextMove = append(possibleNextMove, t.getPiece().CalcPossibleNextMove(t)...)
 		}
 	}
-	// possibleNextMoveのうち、敵駒の存在によって行けないマスを除外する
-	// チェックであれば、チェックを回避する手以外を除外する
-	return possibleNextMove
+	// チェックがかかる手を除外する
+	// // 初回のみpossibleNextMoveがnilになるので、その場合はチェックを行わない
+	// if c.possibleNextMove == nil {
+	// 	return possibleNextMove
+	// }
+	var checkRemovedPossibleNextMove []*Move
+	for _, move := range possibleNextMove {
+		if isMoveBeInChecked(c, move) {
+			// チェック状態になる手は除外する
+			continue
+		}
+		checkRemovedPossibleNextMove = append(checkRemovedPossibleNextMove, move)
+	}
+	return checkRemovedPossibleNextMove
 }
 
 func (c *ChessBoard) GetPossibleNextMove() []*Move {
