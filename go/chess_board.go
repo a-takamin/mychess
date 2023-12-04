@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
@@ -36,7 +38,7 @@ func NewInitialChessBoard() *ChessBoard {
 	board.Add(NewChessTile(2, NewBishop("black"), chessBoard))
 	board.Add(NewChessTile(3, NewQueen("black"), chessBoard))
 	blackKingTile := NewChessTile(4, NewKing("black"), chessBoard)
-	chessBoard.whiteKingTile = blackKingTile
+	chessBoard.blackKingTile = blackKingTile
 	board.Add(blackKingTile)
 	board.Add(NewChessTile(5, NewBishop("black"), chessBoard))
 	board.Add(NewChessTile(6, NewKnight("black"), chessBoard))
@@ -76,18 +78,18 @@ func NewInitialChessBoard() *ChessBoard {
 	chessBoard.board = board
 	chessBoard.trunTeam = "white"
 	chessBoard.selectedTile = nil
-	chessBoard.possibleNextMove = chessBoard.getAllPossibleMove(chessBoard.trunTeam)
+	chessBoard.possibleNextMove = chessBoard.getAllPossibleMove(chessBoard.trunTeam, false)
 
 	return chessBoard
 }
 
 func renewChessBoard(currentChessBoard *ChessBoard, nextMove *Move) {
-	newChessBoard := newChessBoard(currentChessBoard, nextMove)
-	newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(newChessBoard.trunTeam)
+	newChessBoard := newChessBoard(currentChessBoard, nextMove, true)
+	newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(newChessBoard.trunTeam, true)
 	newChessBoard.draw()
 }
 
-func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move) *ChessBoard {
+func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move, considerCheckMove bool) *ChessBoard {
 	currentTiles := currentChessBoard.board.Objects
 	newChessBoard := &ChessBoard{}
 	nextBoard := container.New(layout.NewGridLayout(8))
@@ -138,18 +140,20 @@ func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move) *ChessBoard {
 	newChessBoard.board = nextBoard
 	newChessBoard.trunTeam = nextTeam
 	newChessBoard.selectedTile = nil
-	// newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(nextTeam)
 	newChessBoard.whiteKingTile = whiteKingTile
 	newChessBoard.blackKingTile = blackKingTile
+	newChessBoard.possibleNextMove = newChessBoard.getAllPossibleMove(nextTeam, considerCheckMove)
+	if len(newChessBoard.possibleNextMove) == 0 {
+		fmt.Println("CheckMate!")
+	}
 	return newChessBoard
 }
 
 func isMoveBeInChecked(currentChessBoard *ChessBoard, nextMove *Move) bool {
 	// 仮想的に手を実行
 	// チェックがかかる手があってしまわないか判定
-	supposedNextChessBoard := newChessBoard(currentChessBoard, nextMove)
-	// FIXME: 無限ループが起きている
-	for _, enemyPossibleNextMove := range supposedNextChessBoard.getAllPossibleMove(supposedNextChessBoard.trunTeam) {
+	supposedNextChessBoard := newChessBoard(currentChessBoard, nextMove, false)
+	for _, enemyPossibleNextMove := range supposedNextChessBoard.GetPossibleNextMove() {
 		if enemyPossibleNextMove.to == supposedNextChessBoard.whiteKingTile.getTileId() || enemyPossibleNextMove.to == supposedNextChessBoard.blackKingTile.getTileId() {
 			return true
 		}
@@ -157,13 +161,17 @@ func isMoveBeInChecked(currentChessBoard *ChessBoard, nextMove *Move) bool {
 	return false
 }
 
-func (c *ChessBoard) getAllPossibleMove(turnTeam string) []*Move {
+func (c *ChessBoard) getAllPossibleMove(turnTeam string, considerCheck bool) []*Move {
 	var possibleNextMove []*Move
 	for _, tile := range c.board.Objects {
 		t, _ := tile.(*ChessTile)
 		if t.team == turnTeam {
 			possibleNextMove = append(possibleNextMove, t.getPiece().CalcPossibleNextMove(t)...)
 		}
+	}
+
+	if !considerCheck {
+		return possibleNextMove
 	}
 	// チェックがかかる手を除外する
 	// // 初回のみpossibleNextMoveがnilになるので、その場合はチェックを行わない
