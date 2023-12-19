@@ -59,6 +59,25 @@ func isEighthColumn(currentPos int) bool {
 	return false
 }
 
+func isFirstRank(currentPos int) bool {
+	firstRank := [8]int{0, 1, 2, 3, 4, 5, 6, 7}
+	for _, s := range firstRank {
+		if currentPos == s {
+			return true
+		}
+	}
+	return false
+}
+func isEighthRank(currentPos int) bool {
+	eighthRank := [8]int{56, 57, 58, 59, 60, 61, 62, 63}
+	for _, s := range eighthRank {
+		if currentPos == s {
+			return true
+		}
+	}
+	return false
+}
+
 func isFirstMove(currentPos int) bool {
 	firstSquare := [16]int{8, 9, 10, 11, 12, 13, 14, 15, 48, 49, 50, 51, 52, 53, 54, 55}
 	for _, s := range firstSquare {
