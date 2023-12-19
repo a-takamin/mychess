@@ -30,16 +30,28 @@ func (p *Rook) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	// 上
 	if !isFirstRank(pos) {
 		for i := pos + upMove; isValidPos(i); i += upMove {
-			if currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam() != currentTile.team {
+			possibleMovePosTeam := currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam()
+			if possibleMovePosTeam == "noteam" {
 				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+			} else if possibleMovePosTeam != currentTile.team {
+				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+				break
+			} else {
+				break
 			}
 		}
 	}
 	// 下
 	if !isEighthRank(pos) {
 		for i := pos + downMove; isValidPos(i); i += downMove {
-			if currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam() != currentTile.team {
+			possibleMovePosTeam := currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam()
+			if possibleMovePosTeam == "noteam" {
 				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+			} else if possibleMovePosTeam != currentTile.team {
+				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+				break
+			} else {
+				break
 			}
 		}
 	}
@@ -47,8 +59,14 @@ func (p *Rook) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	if !isFirstColumn(pos) {
 		// 第8カラムにワープするまで
 		for i := pos + leftMove; isValidPos(i) && !isEighthColumn(i); i += leftMove {
-			if currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam() != currentTile.team {
+			possibleMovePosTeam := currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam()
+			if possibleMovePosTeam == "noteam" {
 				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+			} else if possibleMovePosTeam != currentTile.team {
+				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+				break
+			} else {
+				break
 			}
 		}
 	}
@@ -56,8 +74,14 @@ func (p *Rook) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	if !isEighthColumn(pos) {
 		// 第1カラムにワープするまで
 		for i := pos + rightMove; isValidPos(i) && !isFirstColumn(i); i += rightMove {
-			if currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam() != currentTile.team {
+			possibleMovePosTeam := currentTile.chessBoard.getChessTile(i).getPiece().GetPieceTeam()
+			if possibleMovePosTeam == "noteam" {
 				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+			} else if possibleMovePosTeam != currentTile.team {
+				possibleNextMove = append(possibleNextMove, NewMove(currentTile, i))
+				break
+			} else {
+				break
 			}
 		}
 	}
