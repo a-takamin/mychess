@@ -29,6 +29,26 @@ func isFirstColumn(currentPos int) bool {
 	return false
 }
 
+func isSecondColumn(currentPos int) bool {
+	secondColumn := [8]int{1, 9, 17, 25, 33, 41, 49, 57}
+	for _, s := range secondColumn {
+		if currentPos == s {
+			return true
+		}
+	}
+	return false
+}
+
+func isSeventhColumn(currentPos int) bool {
+	seventhColumn := [8]int{6, 14, 22, 30, 38, 46, 54, 62}
+	for _, s := range seventhColumn {
+		if currentPos == s {
+			return true
+		}
+	}
+	return false
+}
+
 func isEighthColumn(currentPos int) bool {
 	eighthColumn := [8]int{7, 15, 23, 31, 39, 47, 55, 63}
 	for _, s := range eighthColumn {
@@ -47,6 +67,10 @@ func isFirstMove(currentPos int) bool {
 		}
 	}
 	return false
+}
+
+func isValidPos(currentPos int) bool {
+	return 0 <= currentPos && currentPos < 64
 }
 
 // func isEndSquare(currentPos int) bool {
