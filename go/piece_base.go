@@ -78,16 +78,6 @@ func isEighthRank(currentPos int) bool {
 	return false
 }
 
-func isFirstMove(currentPos int) bool {
-	firstSquare := [16]int{8, 9, 10, 11, 12, 13, 14, 15, 48, 49, 50, 51, 52, 53, 54, 55}
-	for _, s := range firstSquare {
-		if currentPos == s {
-			return true
-		}
-	}
-	return false
-}
-
 func isValidPos(currentPos int) bool {
 	return 0 <= currentPos && currentPos < 64
 }

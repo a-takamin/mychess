@@ -34,7 +34,7 @@ func (p *Pawn) CalcPossibleNextMove(currentTile *ChessTile) []*Move {
 	}
 
 	// 初期位置からは2マス
-	if isFirstMove(pos) {
+	if p.isFirstMove(pos) {
 		if (currentTile.chessBoard.getChessTile(pos+(PAWN_MOVE_STEP*direction)).getPiece().GetPieceTeam() == "noteam") && (currentTile.chessBoard.getChessTile(pos+(PAWN_MOVE_STEP*direction*2)).getPiece().GetPieceTeam() == "noteam") {
 			possibleNextMove = append(possibleNextMove, NewMove(currentTile, pos+(PAWN_MOVE_STEP*direction)*2))
 		}
@@ -53,24 +53,57 @@ func calcAttackMove(currentTile *ChessTile) []*Move {
 	team := currentTile.getPiece().GetPieceTeam()
 	pos := currentTile.getTileId()
 	if team == "white" {
-		leftAttack := pos - 9
-		rightAttack := pos - 7
-		if !isFirstColumn(pos) && leftAttack >= 0 && currentTile.getChessBoard().getChessTile(leftAttack).getPiece().GetPieceTeam() == "black" {
-			move = append(move, NewMove(currentTile, leftAttack))
+		leftAttackTileId := pos - 9
+		rightAttackTileId := pos - 7
+		if !isFirstColumn(pos) && leftAttackTileId >= 0 && currentTile.getChessBoard().getChessTile(leftAttackTileId).getPiece().GetPieceTeam() == "black" {
+			move = append(move, NewMove(currentTile, leftAttackTileId))
 		}
-		if !isEighthColumn(pos) && rightAttack >= 0 && currentTile.getChessBoard().getChessTile(rightAttack).getPiece().GetPieceTeam() == "black" {
-			move = append(move, NewMove(currentTile, rightAttack))
+		if !isEighthColumn(pos) && rightAttackTileId >= 0 && currentTile.getChessBoard().getChessTile(rightAttackTileId).getPiece().GetPieceTeam() == "black" {
+			move = append(move, NewMove(currentTile, rightAttackTileId))
+		}
+		if currentTile.chessBoard.enPassantTarget != nil && currentTile.chessBoard.enPassantTarget.getPiece().GetPieceTeam() == "black" {
+			// 相手ポーンが今いるマスの1マス後ろがアンパッサン攻撃対象マス
+			if currentTile.chessBoard.enPassantTarget.getTileId()-8 == leftAttackTileId {
+				move = append(move, NewMove(currentTile, leftAttackTileId))
+			}
+			if currentTile.chessBoard.enPassantTarget.getTileId()-8 == rightAttackTileId {
+				move = append(move, NewMove(currentTile, rightAttackTileId))
+			}
 		}
 	}
 	if team == "black" {
-		leftAttack := pos + 9
-		rightAttack := pos + 7
-		if !isEighthColumn(pos) && leftAttack <= 63 && currentTile.getChessBoard().getChessTile(leftAttack).getPiece().GetPieceTeam() == "white" {
-			move = append(move, NewMove(currentTile, leftAttack))
+		leftAttackTileId := pos + 9
+		rightAttackTileId := pos + 7
+		if !isEighthColumn(pos) && leftAttackTileId <= 63 && currentTile.getChessBoard().getChessTile(leftAttackTileId).getPiece().GetPieceTeam() == "white" {
+			move = append(move, NewMove(currentTile, leftAttackTileId))
 		}
-		if !isFirstColumn(pos) && rightAttack <= 63 && currentTile.getChessBoard().getChessTile(rightAttack).getPiece().GetPieceTeam() == "white" {
-			move = append(move, NewMove(currentTile, rightAttack))
+		if !isFirstColumn(pos) && rightAttackTileId <= 63 && currentTile.getChessBoard().getChessTile(rightAttackTileId).getPiece().GetPieceTeam() == "white" {
+			move = append(move, NewMove(currentTile, rightAttackTileId))
+		}
+		if currentTile.chessBoard.enPassantTarget != nil && currentTile.chessBoard.enPassantTarget.getPiece().GetPieceTeam() == "white" {
+			// 相手ポーンが今いるマスの1マス後ろがアンパッサン攻撃対象マス
+			if currentTile.chessBoard.enPassantTarget.getTileId()+8 == leftAttackTileId {
+				move = append(move, NewMove(currentTile, leftAttackTileId))
+			}
+			if currentTile.chessBoard.enPassantTarget.getTileId()+8 == rightAttackTileId {
+				move = append(move, NewMove(currentTile, rightAttackTileId))
+			}
 		}
 	}
 	return move
+}
+
+func (p *Pawn) isFirstMove(currentPos int) bool {
+	var firstSquare [8]int
+	if p.pieceTeam == "white" {
+		firstSquare = [8]int{48, 49, 50, 51, 52, 53, 54, 55}
+	} else if p.pieceTeam == "black" {
+		firstSquare = [8]int{8, 9, 10, 11, 12, 13, 14, 15}
+	}
+	for _, s := range firstSquare {
+		if currentPos == s {
+			return true
+		}
+	}
+	return false
 }

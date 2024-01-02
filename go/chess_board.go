@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -16,12 +17,12 @@ type ChessBoard struct {
 	possibleNextMove []*Move
 	whiteKingTile    *ChessTile
 	blackKingTile    *ChessTile
+	enPassantTarget  *ChessTile
 	// ToDo
 }
 
 func (c *ChessBoard) draw() {
 	c.w.SetContent(c.board)
-	// c.w.Canvas().Refresh(c.board)
 }
 
 func (c *ChessBoard) GetBoard() *fyne.Container {
@@ -93,28 +94,71 @@ func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move, considerCheckM
 	currentTiles := currentChessBoard.board.Objects
 	newChessBoard := &ChessBoard{}
 	nextBoard := container.New(layout.NewGridLayout(8))
+	newChessBoard.board = nextBoard
+	fromTileId := nextMove.fromTile.getTileId()
+	var enPassantAttackedPawn *ChessTile = nil
 
 	for _, tile := range currentTiles {
 		tileId := tile.(*ChessTile).tileId
-		if tileId == nextMove.fromTile.getTileId() {
+
+		if tileId == fromTileId {
 			// 移動元は空にする
 			nextBoard.Add(NewChessTile(tileId, NewNoPiece("noteam"), newChessBoard))
+
 		} else if tileId == nextMove.to {
 			// 移動先に移動元の駒を移動させる
-			/// 特殊1: ポーン昇格
-			if nextMove.fromTile.getPiece().GetPieceType() == "Pawn" && nextMove.fromTile.getPiece().GetPieceTeam() == "white" && nextMove.to >= 0 && nextMove.to <= 7 {
-				nextBoard.Add(NewChessTile(tileId, NewQueen("white"), newChessBoard))
-			} else if nextMove.fromTile.getPiece().GetPieceType() == "Pawn" && nextMove.fromTile.getPiece().GetPieceTeam() == "black" && nextMove.to >= 56 && nextMove.to <= 63 {
-				nextBoard.Add(NewChessTile(tileId, NewQueen("black"), newChessBoard))
-				/// TODO: 特殊2: EnPassantロジック
-				/// TODO: 特殊3: キャスリングの場合は、キングとルークを同時に移動させる
+			if nextMove.fromTile.getPiece().GetPieceType() == "Pawn" { // 移動駒がポーンの場合
+				// 初期として通常移動の場合をセットしておく
+				newChessTile := NewChessTile(tileId, nextMove.fromTile.getPiece(), newChessBoard)
+				movingPawn := nextMove.fromTile.getPiece().(*Pawn)
+
+				/// ポーン特殊0: 2マス移動時はアンパッサン攻撃対象になる
+				if movingPawn.isFirstMove(fromTileId) && (nextMove.to-fromTileId == 16 || nextMove.to-fromTileId == -16) {
+					newChessBoard.enPassantTarget = newChessTile
+				}
+
+				/// ポーン特殊1: 昇格
+				if movingPawn.GetPieceTeam() == "white" && nextMove.to >= 0 && nextMove.to <= 7 {
+					newChessTile = NewChessTile(tileId, NewQueen("white"), newChessBoard)
+				} else if movingPawn.GetPieceTeam() == "black" && nextMove.to >= 56 && nextMove.to <= 63 {
+					newChessTile = NewChessTile(tileId, NewQueen("black"), newChessBoard)
+				}
+
+				/// ポーン特殊2: EnPassant攻撃
+				if currentChessBoard.enPassantTarget != nil {
+					if movingPawn.GetPieceTeam() == "white" && currentChessBoard.enPassantTarget.getPiece().GetPieceTeam() == "black" {
+						if currentChessBoard.enPassantTarget.getTileId()-8 == nextMove.to {
+							enPassantAttackedPawn = currentChessBoard.enPassantTarget
+						}
+					}
+					if movingPawn.GetPieceTeam() == "black" && currentChessBoard.enPassantTarget.getPiece().GetPieceTeam() == "white" {
+						if currentChessBoard.enPassantTarget.getTileId()+8 == nextMove.to {
+							enPassantAttackedPawn = currentChessBoard.enPassantTarget
+						}
+					}
+				}
+
+				// ポーンを移動させる
+				nextBoard.Add(newChessTile)
 			} else {
 				nextBoard.Add(NewChessTile(tileId, nextMove.fromTile.getPiece(), newChessBoard))
 			}
+
+			// TODO: 特殊: キャスリングの場合は、キングとルークを同時に移動させる
+			/// キャスリングができるかどうかの判定はここではやらない
 		} else {
+			// タイルそのまま
 			nextBoard.Add(NewChessTile(tileId, tile.(*ChessTile).piece, newChessBoard))
 		}
 	}
+
+	// アンパッサン攻撃だった場合は攻撃されたポーンを取り除く
+	if enPassantAttackedPawn != nil {
+		noPiece := NewNoPiece("noteam")
+		newChessBoard.getChessTile(enPassantAttackedPawn.getTileId()).piece = noPiece
+		newChessBoard.getChessTile(enPassantAttackedPawn.getTileId()).updateImage("./image/bb.png")
+	}
+
 	// kingの位置を把握する
 	var whiteKingTile *ChessTile
 	var blackKingTile *ChessTile
@@ -137,7 +181,6 @@ func newChessBoard(currentChessBoard *ChessBoard, nextMove *Move, considerCheckM
 		nextTeam = "white"
 	}
 	newChessBoard.w = currentChessBoard.w
-	newChessBoard.board = nextBoard
 	newChessBoard.trunTeam = nextTeam
 	newChessBoard.selectedTile = nil
 	newChessBoard.whiteKingTile = whiteKingTile
@@ -187,6 +230,11 @@ func (c *ChessBoard) getAllPossibleMove(turnTeam string, considerCheck bool) []*
 		checkRemovedPossibleNextMove = append(checkRemovedPossibleNextMove, move)
 	}
 	return checkRemovedPossibleNextMove
+	// キャスリング
+	// 1. kingが初期位置である
+	// 2. ルークが初期位置である
+	// 3. kingの通り道がチェックされていない
+	// 4. kingのキャスリング位置がチェックされていない
 }
 
 func (c *ChessBoard) GetPossibleNextMove() []*Move {
@@ -200,5 +248,6 @@ func (c *ChessBoard) getChessTile(tileId int) *ChessTile {
 			return t
 		}
 	}
-	panic("tile is not found")
+	log.Fatal("tile is not found")
+	return nil
 }

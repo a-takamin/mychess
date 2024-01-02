@@ -21,6 +21,11 @@ type ChessTile struct {
 	backgroundImage *canvas.Image
 }
 
+func (w *ChessTile) updateImage(path string) {
+	w.backgroundImage = canvas.NewImageFromFile(path)
+	w.Refresh()
+}
+
 func NewChessTile(position int, piece Piece, chessBoard *ChessBoard) *ChessTile {
 
 	tile := &ChessTile{
@@ -121,9 +126,11 @@ func (r *chessTileRenderer) Layout(size fyne.Size) {
 
 // @Override
 func (r *chessTileRenderer) Refresh() {
-	// r.background.FillColor = r.background.FillColor
 	r.background.Refresh()
 	if r.image != nil {
+		// なぜかこれをやらないとアンパッサンのときに画像が更新されない。
+		// fyneを理解して後で直す。
+		r.image = canvas.NewImageFromFile("")
 		r.image.Refresh()
 	}
 }
